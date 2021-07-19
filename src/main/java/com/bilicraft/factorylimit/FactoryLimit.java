@@ -5,10 +5,16 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Minecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.loot.LootTables;
 import org.bukkit.loot.Lootable;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -30,15 +36,25 @@ public final class FactoryLimit extends JavaPlugin implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void chestOpening(PlayerInteractEvent event) {
-        if (!(event.getClickedBlock() != null && event.getClickedBlock().getType() != Material.AIR)) {
-            return;
+        // 只操作方块
+        if(event.getClickedBlock() != null) {
+            BlockState state = event.getClickedBlock().getState();
+            if (state instanceof Lootable && state instanceof InventoryHolder) {
+                Lootable lootable = (Lootable) state;
+                if(lootable.getLootTable() != null) {
+                    lootable.setLootTable(LootTables.EMPTY.getLootTable());
+                }
+            }
         }
-        BlockState state = event.getClickedBlock().getState();
-        if (state instanceof Lootable) {
-            Lootable lootable = (Lootable) state;
-            if (!Objects.equals(lootable.getLootTable(), LootTables.EMPTY.getLootTable())) {
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void chestOpening(PlayerInteractEntityEvent event) {
+        // 只操作实体
+        if(event.getRightClicked() instanceof Lootable && event.getRightClicked() instanceof Minecart){
+            Lootable lootable = (Lootable) event.getRightClicked();
+            if(lootable.getLootTable() != null) {
                 lootable.setLootTable(LootTables.EMPTY.getLootTable());
-                event.getPlayer().sendMessage(ChatColor.RED + "异界工厂世界线的宝箱不会开到宝藏");
             }
         }
     }
